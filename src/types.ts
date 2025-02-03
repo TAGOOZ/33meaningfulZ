@@ -9,4 +9,5 @@ export interface DhikrState {
   currentType: 'tasbih' | 'tahmid' | 'takbir';
   displayMode: 'dynamic' | 'list' | 'focus';
   totalCount: number;
+  isEndlessMode: boolean;
 }
