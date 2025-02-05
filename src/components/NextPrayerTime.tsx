@@ -44,21 +44,31 @@ export default function NextPrayerTime() {
   }
 
   return (
-    <div className="bg-emerald-50 dark:bg-emerald-900/50 rounded-lg p-4 mb-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
+    <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="bg-emerald-50 dark:bg-emerald-900/50 rounded-lg p-4">
+        <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200 mb-2">
           <Clock className="w-5 h-5" />
           <span className="font-bold">الصلاة القادمة</span>
         </div>
-        <div className="text-emerald-600 dark:text-emerald-300 font-bold">
-          {getPrayerNameInArabic(nextPrayer.name)}
+        <div className="flex justify-between items-center">
+          <div className="text-emerald-600 dark:text-emerald-300 font-bold text-lg">
+            {getPrayerNameInArabic(nextPrayer.name)}
+          </div>
+          <div className="text-emerald-600 dark:text-emerald-300 font-bold">
+            {nextPrayer.time.toLocaleTimeString('ar-SA', { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              hour12: true 
+            })}
+          </div>
         </div>
       </div>
-      <div className="mt-2 flex justify-between items-center text-sm">
-        <div className="text-gray-600 dark:text-gray-400">
-          {nextPrayer.time.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}
+
+      <div className="bg-emerald-50 dark:bg-emerald-900/50 rounded-lg p-4">
+        <div className="text-emerald-800 dark:text-emerald-200 font-bold mb-2">
+          الوقت المتبقي
         </div>
-        <div className="text-emerald-600 dark:text-emerald-400 font-arabic">
+        <div className="text-emerald-600 dark:text-emerald-300 font-bold text-lg">
           {nextPrayer.remainingTime}
         </div>
       </div>

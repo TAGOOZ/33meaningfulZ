@@ -1,5 +1,5 @@
-import React from 'react';
-import { X } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Save } from 'lucide-react';
 
 interface NotificationSettingsProps {
   isOpen: boolean;
@@ -12,6 +12,47 @@ interface NotificationSettingsProps {
   onTogglePrayerNotifications: () => void;
 }
 
+interface TimePickerProps {
+  value: number;
+  onChange: (hour: number, minute: number) => void;
+  disabled?: boolean;
+}
+
+function TimePicker({ value, onChange, disabled = false }: TimePickerProps) {
+  const hour = Math.floor(value);
+  const minute = Math.round((value - hour) * 60);
+
+  return (
+    <div className="flex gap-2 items-center" dir="ltr">
+      <select
+        value={hour}
+        onChange={(e) => onChange(parseInt(e.target.value, 10), minute)}
+        disabled={disabled}
+        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-emerald-500 dark:focus:border-emerald-500"
+      >
+        {Array.from({ length: 24 }, (_, i) => (
+          <option key={i} value={i}>
+            {i.toString().padStart(2, '0')}
+          </option>
+        ))}
+      </select>
+      <span className="text-gray-600 dark:text-gray-400">:</span>
+      <select
+        value={minute}
+        onChange={(e) => onChange(hour, parseInt(e.target.value, 10))}
+        disabled={disabled}
+        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-emerald-500 dark:focus:border-emerald-500"
+      >
+        {Array.from({ length: 12 }, (_, i) => i * 5).map((minute) => (
+          <option key={minute} value={minute}>
+            {minute.toString().padStart(2, '0')}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 export default function NotificationSettings({
   isOpen,
   onClose,
@@ -22,12 +63,18 @@ export default function NotificationSettings({
   prayerNotifications,
   onTogglePrayerNotifications,
 }: NotificationSettingsProps) {
+  const [tempTimes, setTempTimes] = useState(reminderTimes);
+
   if (!isOpen) return null;
 
-  const handleReminderChange = (index: number, value: string) => {
-    const newTimes = [...reminderTimes];
-    newTimes[index] = parseInt(value, 10);
-    onUpdateReminderTimes(newTimes);
+  const handleTimeChange = (index: number, hour: number, minute: number) => {
+    const newTimes = [...tempTimes];
+    newTimes[index] = hour + (minute / 60);
+    setTempTimes(newTimes);
+  };
+
+  const handleSaveTimes = () => {
+    onUpdateReminderTimes(tempTimes);
   };
 
   return (
@@ -73,27 +120,29 @@ export default function NotificationSettings({
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-gray-900 dark:text-white font-bold">
-              أوقات تذكير الأذكار
-            </h3>
-            {reminderTimes.map((time, index) => (
+            <div className="flex items-center justify-between">
+              <h3 className="text-gray-900 dark:text-white font-bold">
+                أوقات تذكير الأذكار
+              </h3>
+              <button
+                onClick={handleSaveTimes}
+                disabled={!notificationsEnabled}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-700 transition-colors"
+              >
+                <Save className="w-4 h-4" />
+                <span>حفظ</span>
+              </button>
+            </div>
+            {tempTimes.map((time, index) => (
               <div key={index} className="flex items-center gap-4">
                 <span className="text-gray-900 dark:text-white">
                   التذكير {index + 1}
                 </span>
-                <select
+                <TimePicker
                   value={time}
-                  onChange={(e) => handleReminderChange(index, e.target.value)}
+                  onChange={(hour, minute) => handleTimeChange(index, hour, minute)}
                   disabled={!notificationsEnabled}
-                  className="mr-auto bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-emerald-500 dark:focus:border-emerald-500"
-                  dir="ltr"
-                >
-                  {Array.from({ length: 24 }, (_, i) => (
-                    <option key={i} value={i}>
-                      {i.toString().padStart(2, '0')}:00
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
             ))}
           </div>

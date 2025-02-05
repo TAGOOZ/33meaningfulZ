@@ -27,47 +27,66 @@ export function getPrayerTimes(coordinates: Coordinates): Record<string, Date> {
   };
 }
 
-export function getNextPrayer(coordinates: Coordinates): NextPrayer {
-  const times = getPrayerTimes(coordinates);
-  const now = new Date();
-  let nextPrayer: string = 'fajr';
-  let nextPrayerTime: Date = times.fajr;
-
-  // Find the next prayer
-  for (const [prayer, time] of Object.entries(times)) {
-    if (time > now) {
-      nextPrayer = prayer;
-      nextPrayerTime = time;
-      break;
-    }
-  }
-
-  // If all prayers for today have passed, get tomorrow's Fajr
-  if (nextPrayerTime < now) {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowTimes = getPrayerTimes(coordinates);
-    nextPrayer = 'fajr';
-    nextPrayerTime = tomorrowTimes.fajr;
-  }
-
-  // Calculate remaining time
-  const diff = nextPrayerTime.getTime() - now.getTime();
+function formatRemainingTime(diff: number): string {
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-  // Format remaining time in Arabic
+  const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  const toArabicNumber = (num: number) => 
+    num.toString().split('').map(d => arabicNumbers[parseInt(d)]).join('');
+
   let remainingTime = '';
+  
   if (hours > 0) {
-    remainingTime += `${hours} ساعة `;
+    remainingTime += `${toArabicNumber(hours)} ساعة `;
   }
+  
   if (minutes > 0 || hours === 0) {
-    remainingTime += `${minutes} دقيقة`;
+    remainingTime += `${toArabicNumber(minutes)} دقيقة`;
   }
 
+  return remainingTime || 'أقل من دقيقة';
+}
+
+export function getNextPrayer(coordinates: Coordinates): NextPrayer {
+  const now = new Date();
+  const today = new Date(now);
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const todayTimes = new PrayerTimes(
+    new AdhanCoordinates(coordinates.latitude, coordinates.longitude),
+    today,
+    CalculationMethod.MuslimWorldLeague()
+  );
+
+  const tomorrowTimes = new PrayerTimes(
+    new AdhanCoordinates(coordinates.latitude, coordinates.longitude),
+    tomorrow,
+    CalculationMethod.MuslimWorldLeague()
+  );
+
+  // Get all prayer times for today and tomorrow
+  const prayers = [
+    { name: 'fajr', time: todayTimes.fajr },
+    { name: 'dhuhr', time: todayTimes.dhuhr },
+    { name: 'asr', time: todayTimes.asr },
+    { name: 'maghrib', time: todayTimes.maghrib },
+    { name: 'isha', time: todayTimes.isha },
+    // Add tomorrow's fajr
+    { name: 'fajr', time: tomorrowTimes.fajr }
+  ];
+
+  // Find the next prayer
+  const nextPrayer = prayers.find(prayer => prayer.time > now) || prayers[0];
+
+  // Calculate time difference
+  const diff = nextPrayer.time.getTime() - now.getTime();
+  const remainingTime = formatRemainingTime(diff);
+
   return {
-    name: nextPrayer,
-    time: nextPrayerTime,
+    name: nextPrayer.name,
+    time: nextPrayer.time,
     remainingTime
   };
 }

@@ -6,35 +6,55 @@ import AboutPage from './AboutPage';
 import NextPrayerTime from './NextPrayerTime';
 import NotificationSettings from './NotificationSettings';
 import { setupNotifications, scheduleNotifications, clearAllNotifications } from '../utils/notifications';
+import { saveDhikrState, loadDhikrState, saveSettings, loadSettings, updateDailyStats } from '../utils/storage';
 
 export default function DhikrCounter() {
-  const [state, setState] = useState<DhikrState>({
-    count: 0,
-    currentType: 'tasbih',
-    displayMode: 'dynamic',
-    totalCount: 0,
-    isEndlessMode: false,
+  const [state, setState] = useState<DhikrState>(() => {
+    const savedState = loadDhikrState();
+    return savedState || {
+      count: 0,
+      currentType: 'tasbih',
+      displayMode: 'dynamic',
+      totalCount: 0,
+      isEndlessMode: false,
+    };
   });
 
-  const [isDark, setIsDark] = useState(() => 
-    document.documentElement.classList.contains('dark')
-  );
+  const [isDark, setIsDark] = useState(() => {
+    const settings = loadSettings();
+    return settings?.isDark ?? document.documentElement.classList.contains('dark');
+  });
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [prayerNotifications, setPrayerNotifications] = useState(true);
-  const [reminderTimes, setReminderTimes] = useState([9, 14, 17]); // Default reminder times
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    const settings = loadSettings();
+    return settings?.notificationsEnabled ?? false;
+  });
+  const [prayerNotifications, setPrayerNotifications] = useState(() => {
+    const settings = loadSettings();
+    return settings?.prayerNotifications ?? true;
+  });
+  const [reminderTimes, setReminderTimes] = useState(() => {
+    const settings = loadSettings();
+    return settings?.reminderTimes ?? [9, 14, 17];
+  });
 
   useEffect(() => {
-    // Check if notifications are already enabled
-    if ('Notification' in window) {
-      setNotificationsEnabled(Notification.permission === 'granted');
-    }
-  }, []);
+    saveDhikrState(state);
+  }, [state]);
+
+  useEffect(() => {
+    saveSettings({
+      isDark,
+      notificationsEnabled,
+      prayerNotifications,
+      reminderTimes,
+    });
+  }, [isDark, notificationsEnabled, prayerNotifications, reminderTimes]);
 
   const handleNotificationToggle = async () => {
     if (!notificationsEnabled) {
@@ -119,6 +139,8 @@ export default function DhikrCounter() {
       const newCount = prev.count + 1;
       const newTotalCount = prev.totalCount + 1;
 
+      updateDailyStats(1);
+
       if (!prev.isEndlessMode) {
         if (newTotalCount === 100) {
           return {
@@ -170,6 +192,15 @@ export default function DhikrCounter() {
     }));
   };
 
+  const resetCounter = () => {
+    setState(prev => ({
+      ...prev,
+      count: 0,
+      totalCount: 0,
+      currentType: 'tasbih',
+    }));
+  };
+
   const getButtonText = () => {
     if (!state.isEndlessMode && state.totalCount === 99) {
       return 'اختم';
@@ -203,73 +234,73 @@ export default function DhikrCounter() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900 dark:to-teal-950 flex flex-col items-center justify-center p-4">
+      <img 
+        src="/dhikr-logo.png" 
+        alt="تدبر الذكر" 
+        className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 object-contain mb-6"
+      />
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 space-y-6 relative">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-emerald-800 dark:text-emerald-200">
-            تدبر الذكر
-          </h1>
-          <div className="flex gap-2">
+        <div className="flex justify-center items-center w-full gap-2">
+          <button
+            onClick={() => setShowNotificationSettings(true)}
+            className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
+            title={notificationsEnabled ? "إعدادات التنبيهات" : "تفعيل التنبيهات"}
+          >
+            <Bell 
+              className={`w-5 h-5 ${
+                notificationsEnabled 
+                  ? 'text-emerald-600 dark:text-emerald-400' 
+                  : 'text-gray-400 dark:text-gray-600'
+              }`} 
+            />
+          </button>
+          <button
+            onClick={() => setShowAbout(true)}
+            className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
+            title="عن التطبيق"
+          >
+            <Info className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          </button>
+          {isInstallable && (
             <button
-              onClick={() => setShowNotificationSettings(true)}
+              onClick={handleInstall}
               className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
-              title={notificationsEnabled ? "إعدادات التنبيهات" : "تفعيل التنبيهات"}
+              title="تثبيت التطبيق"
             >
-              <Bell 
-                className={`w-5 h-5 ${
-                  notificationsEnabled 
-                    ? 'text-emerald-600 dark:text-emerald-400' 
-                    : 'text-gray-400 dark:text-gray-600'
-                }`} 
-              />
+              <Download className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </button>
-            <button
-              onClick={() => setShowAbout(true)}
-              className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
-              title="عن التطبيق"
-            >
-              <Info className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            </button>
-            {isInstallable && (
-              <button
-                onClick={handleInstall}
-                className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
-                title="تثبيت التطبيق"
-              >
-                <Download className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              </button>
+          )}
+          <button
+            onClick={toggleMode}
+            className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
+            title={state.isEndlessMode ? "وضع العد التقليدي" : "وضع العد المستمر"}
+          >
+            {state.isEndlessMode ? (
+              <Hash className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            ) : (
+              <Infinity className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             )}
-            <button
-              onClick={toggleMode}
-              className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
-              title={state.isEndlessMode ? "وضع العد التقليدي" : "وضع العد المستمر"}
-            >
-              {state.isEndlessMode ? (
-                <Hash className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              ) : (
-                <Infinity className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              )}
-            </button>
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
-            >
-              {isMenuOpen ? (
-                <X className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              ) : (
-                <Menu className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              )}
-            </button>
-            <button
-              onClick={() => setIsDark(!isDark)}
-              className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
-            >
-              {isDark ? (
-                <Sun className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              ) : (
-                <Moon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              )}
-            </button>
-          </div>
+          </button>
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
+          >
+            {isMenuOpen ? (
+              <X className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            ) : (
+              <Menu className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            )}
+          </button>
+          <button
+            onClick={() => setIsDark(!isDark)}
+            className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
+          >
+            {isDark ? (
+              <Sun className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            ) : (
+              <Moon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            )}
+          </button>
         </div>
 
         <NextPrayerTime />
@@ -289,12 +320,21 @@ export default function DhikrCounter() {
           </div>
         </div>
 
-        <button
-          onClick={handleCount}
-          className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg transform active:scale-95 transition-transform"
-        >
-          <span className="text-xl">{getButtonText()}</span>
-        </button>
+        <div className="space-y-2">
+          <button
+            onClick={handleCount}
+            className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg transform active:scale-95 transition-transform"
+          >
+            <span className="text-xl">{getButtonText()}</span>
+          </button>
+
+          <button
+            onClick={resetCounter}
+            className="w-full py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-lg text-sm transition-colors"
+          >
+            تصفير العداد
+          </button>
+        </div>
 
         <div className="text-center text-sm text-gray-600 dark:text-gray-400">
           المجموع: {state.totalCount}
@@ -304,7 +344,7 @@ export default function DhikrCounter() {
         </div>
 
         {isMenuOpen && (
-          <div className="absolute top-20 right-6 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg z-10 overflow-hidden">
+          <div className="absolute top-20 right-1/2 transform translate-x-1/2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg z-10 overflow-hidden">
             {(['tasbih', 'tahmid', 'takbir'] as const).map((type) => (
               <button
                 key={type}

@@ -11,8 +11,24 @@ export async function setupNotifications(): Promise<boolean> {
   }
 
   if (Notification.permission !== 'denied') {
-    const permission = await Notification.requestPermission();
-    return permission === 'granted';
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        // Send welcome notification
+        showNotification('تدبر الذكر', {
+          body: 'تم تفعيل التنبيهات بنجاح! سنذكرك بأوقات الذكر والصلاة 🤲',
+          icon: '/dhikr-logo.png',
+          badge: '/dhikr-logo.png',
+          tag: 'welcome',
+          renotify: true,
+          requireInteraction: true
+        });
+      }
+      return permission === 'granted';
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+      return false;
+    }
   }
 
   return false;
@@ -34,7 +50,6 @@ async function getCurrentPosition(): Promise<Coordinates> {
       },
       (error) => {
         console.warn('Error getting location:', error);
-        // Default to Mecca coordinates if location access is denied
         resolve({
           latitude: 21.4225,
           longitude: 39.8262,
@@ -51,75 +66,132 @@ export function clearAllNotifications() {
   notificationTimers = [];
 }
 
+function showNotification(title: string, options: NotificationOptions) {
+  if (Notification.permission !== 'granted') {
+    return false;
+  }
+
+  try {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.showNotification(title, {
+          ...options,
+          silent: false,
+          requireInteraction: true,
+          vibrate: [200, 100, 200]
+        });
+      });
+    } else {
+      const notification = new Notification(title, {
+        ...options,
+        silent: false,
+        requireInteraction: true
+      });
+      notification.onclick = function() {
+        window.focus();
+        notification.close();
+      };
+    }
+    return true;
+  } catch (error) {
+    console.error('Error showing notification:', error);
+    return false;
+  }
+}
+
+function scheduleNotificationForTime(time: Date, title: string, body: string, tag: string) {
+  const now = new Date();
+  let scheduledTime = new Date(time);
+
+  // If the time has passed for today, schedule for tomorrow
+  if (scheduledTime < now) {
+    scheduledTime.setDate(scheduledTime.getDate() + 1);
+  }
+
+  const timeUntilNotification = scheduledTime.getTime() - now.getTime();
+
+  // Only schedule if it's in the future
+  if (timeUntilNotification > 0) {
+    const timer = setTimeout(() => {
+      showNotification(title, {
+        body,
+        icon: '/dhikr-logo.png',
+        badge: '/dhikr-logo.png',
+        tag,
+        renotify: true,
+        requireInteraction: true
+      });
+      
+      // Reschedule for next day immediately after showing notification
+      scheduleNotificationForTime(scheduledTime, title, body, tag);
+    }, timeUntilNotification);
+
+    notificationTimers.push(timer);
+  }
+}
+
 export async function scheduleNotifications(
   enablePrayerNotifications: boolean = true,
   reminderTimes: number[] = [9, 14, 17]
 ) {
+  if (Notification.permission !== 'granted') {
+    return;
+  }
+
   clearAllNotifications();
 
   try {
+    const coordinates = await getCurrentPosition();
+
     if (enablePrayerNotifications) {
-      const coordinates = await getCurrentPosition();
       const prayerTimes = getPrayerTimes(coordinates);
 
       // Schedule notifications for each prayer time
       Object.entries(prayerTimes).forEach(([prayer, time]) => {
-        const scheduledTime = new Date(time);
-        // Add 10 minutes to prayer time for notification
-        scheduledTime.setMinutes(scheduledTime.getMinutes() + 10);
-        const now = new Date();
+        const notificationTime = new Date(time);
+        notificationTime.setMinutes(notificationTime.getMinutes() - 10); // 10 minutes before prayer
 
-        // If the time has passed today, schedule for tomorrow
-        if (now > scheduledTime) {
-          scheduledTime.setDate(scheduledTime.getDate() + 1);
-        }
-
-        const timeUntilNotification = scheduledTime.getTime() - now.getTime();
-
-        const timer = setTimeout(() => {
-          new Notification('تدبر الذكر', {
-            body: `حان وقت أذكار صلاة ${getPrayerNameInArabic(prayer)} 🤲`,
-            icon: '/pwa-192x192.png',
-            badge: '/pwa-64x64.png',
-            tag: prayer,
-            renotify: true
-          });
-          // Reschedule for the next day
-          scheduleNotifications(enablePrayerNotifications, reminderTimes);
-        }, timeUntilNotification);
-
-        notificationTimers.push(timer);
+        scheduleNotificationForTime(
+          notificationTime,
+          'تدبر الذكر',
+          `حان وقت أذكار صلاة ${getPrayerNameInArabic(prayer)} 🤲`,
+          `prayer-${prayer}`
+        );
       });
     }
 
-    // Schedule reminders at specific times
-    reminderTimes.forEach((hour, index) => {
-      const now = new Date();
-      const scheduledTime = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-        hour,
-        0
+    // Schedule dhikr reminders
+    reminderTimes.forEach((time, index) => {
+      const hour = Math.floor(time);
+      const minute = Math.round((time - hour) * 60);
+      
+      const reminderTime = new Date();
+      reminderTime.setHours(hour, minute, 0, 0);
+
+      scheduleNotificationForTime(
+        reminderTime,
+        'تدبر الذكر',
+        'حان وقت الذكر والدعاء 🤲',
+        `reminder-${index}`
       );
+    });
 
-      if (now > scheduledTime) {
-        scheduledTime.setDate(scheduledTime.getDate() + 1);
-      }
+    // Show confirmation notification
+    const timesStr = reminderTimes
+      .map(time => {
+        const hour = Math.floor(time);
+        const minute = Math.round((time - hour) * 60);
+        return `${hour}:${minute.toString().padStart(2, '0')}`;
+      })
+      .join('، ');
 
-      const timeUntilNotification = scheduledTime.getTime() - now.getTime();
-
-      const timer = setTimeout(() => {
-        new Notification('تدبر الذكر', {
-          body: 'حان وقت الذكر والدعاء 🤲',
-          icon: '/pwa-192x192.png',
-          badge: '/pwa-64x64.png',
-          tag: `reminder-${index}`,
-          renotify: true
-        });
-      }, timeUntilNotification);
-
-      notificationTimers.push(timer);
+    showNotification('تدبر الذكر', {
+      body: `تم جدولة تذكير الأذكار في الأوقات التالية:\n${timesStr} ⏰`,
+      icon: '/dhikr-logo.png',
+      badge: '/dhikr-logo.png',
+      tag: 'schedule-update',
+      renotify: true,
+      requireInteraction: true
     });
   } catch (error) {
     console.error('Error scheduling notifications:', error);

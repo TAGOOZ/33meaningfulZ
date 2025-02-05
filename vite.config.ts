@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['favicon.ico', 'dhikr-logo.png', 'mask-icon.svg'],
       manifest: {
         name: 'تدبر الذكر',
         short_name: 'تدبر الذكر',
@@ -20,28 +20,59 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'pwa-64x64.png',
-            sizes: '64x64',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-192x192.png',
+            src: 'dhikr-logo.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'dhikr-logo.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: 'dhikr-logo.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any'
           },
           {
-            src: 'maskable-icon-512x512.png',
+            src: 'dhikr-logo.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
           }
-        ]
+        ],
+        screenshots: [
+          {
+            src: 'dhikr-logo.png',
+            sizes: '512x512',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'تدبر الذكر'
+          }
+        ],
+        shortcuts: [
+          {
+            name: 'تدبر الذكر',
+            url: '/',
+            icons: [
+              {
+                src: 'dhikr-logo.png',
+                sizes: '96x96',
+                type: 'image/png'
+              }
+            ]
+          }
+        ],
+        categories: ['lifestyle', 'utilities'],
+        dir: 'rtl',
+        lang: 'ar',
+        prefer_related_applications: false,
+        related_applications: [],
+        padding: true,
+        display_override: ['window-controls-overlay']
       },
       workbox: {
         runtimeCaching: [
