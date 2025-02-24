@@ -2,7 +2,7 @@ import { getPrayerTimes, Coordinates, getNextPrayer } from './prayerTimes';
 
 export async function setupNotifications(): Promise<boolean> {
   if (!('Notification' in window)) {
-    console.log('This browser does not support notifications');
+    alert('عذراً، متصفحك لا يدعم التنبيهات');
     return false;
   }
 
@@ -14,19 +14,36 @@ export async function setupNotifications(): Promise<boolean> {
     try {
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
-        // Send welcome notification
-        showNotification('تدبر الذكر', {
-          body: 'تم تفعيل التنبيهات بنجاح! سنذكرك بأوقات الذكر والصلاة 🤲',
-          icon: '/dhikr-logo.png',
-          badge: '/dhikr-logo.png',
-          tag: 'welcome',
-          renotify: true,
-          requireInteraction: true
-        });
+        // Test notification to confirm it works
+        const isDesktop = !('standalone' in navigator) && !('serviceWorker' in navigator);
+        if (isDesktop) {
+          showNotification('تدبر الذكر', {
+            body: 'تم تفعيل التنبيهات على المتصفح! سنذكرك بأوقات الذكر والصلاة 🤲',
+            icon: '/dhikr-logo.png',
+            badge: '/dhikr-logo.png',
+            tag: 'welcome',
+            renotify: true,
+            requireInteraction: true,
+            silent: false,
+            data: { url: window.location.href }
+          });
+        } else {
+          // Mobile notification
+          showNotification('تدبر الذكر', {
+            body: 'تم تفعيل التنبيهات! سنذكرك بأوقات الذكر والصلاة 🤲',
+            icon: '/dhikr-logo.png',
+            badge: '/dhikr-logo.png',
+            tag: 'welcome',
+            renotify: true,
+            requireInteraction: true,
+            data: { url: window.location.href }
+          });
+        }
       }
       return permission === 'granted';
     } catch (error) {
       console.error('Error requesting notification permission:', error);
+      alert('حدث خطأ أثناء طلب إذن التنبيهات');
       return false;
     }
   }
@@ -37,7 +54,10 @@ export async function setupNotifications(): Promise<boolean> {
 async function getCurrentPosition(): Promise<Coordinates> {
   return new Promise((resolve, reject) => {
     if (!('geolocation' in navigator)) {
-      reject(new Error('Geolocation is not supported'));
+      resolve({
+        latitude: 21.4225,
+        longitude: 39.8262,
+      });
       return;
     }
 
@@ -54,7 +74,8 @@ async function getCurrentPosition(): Promise<Coordinates> {
           latitude: 21.4225,
           longitude: 39.8262,
         });
-      }
+      },
+      { timeout: 5000, maximumAge: 600000 } // 5s timeout, 10min cache
     );
   });
 }
@@ -64,33 +85,71 @@ let notificationTimers: NodeJS.Timeout[] = [];
 export function clearAllNotifications() {
   notificationTimers.forEach(timer => clearTimeout(timer));
   notificationTimers = [];
+  
+  // Clear any existing notifications
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.ready.then(registration => {
+      registration.getNotifications().then(notifications => {
+        notifications.forEach(notification => notification.close());
+      });
+    });
+  }
 }
 
-function showNotification(title: string, options: NotificationOptions) {
+function showNotification(title: string, options: NotificationOptions): boolean {
   if (Notification.permission !== 'granted') {
     return false;
   }
 
   try {
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.ready.then(registration => {
-        registration.showNotification(title, {
-          ...options,
-          silent: false,
-          requireInteraction: true,
-          vibrate: [200, 100, 200]
-        });
-      });
-    } else {
+    const isDesktop = !('standalone' in navigator) && !('serviceWorker' in navigator);
+    const currentUrl = window.location.href;
+    
+    if (isDesktop) {
+      // Desktop browser notification
       const notification = new Notification(title, {
         ...options,
         silent: false,
-        requireInteraction: true
+        requireInteraction: true,
+        icon: '/dhikr-logo.png',
+        data: { url: currentUrl }
       });
+      
       notification.onclick = function() {
+        // Focus or open the window
+        if (window.parent) {
+          window.parent.focus();
+        }
         window.focus();
+        
+        // Open the app URL if window is not focused
+        if (document.visibilityState === 'hidden') {
+          window.open(currentUrl, '_blank');
+        }
+        
         notification.close();
       };
+    } else {
+      // Mobile PWA notification via Service Worker
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.showNotification(title, {
+            ...options,
+            silent: false,
+            requireInteraction: true,
+            vibrate: [200, 100, 200],
+            icon: '/dhikr-logo.png',
+            badge: '/dhikr-logo.png',
+            data: { url: currentUrl },
+            actions: [
+              {
+                action: 'open',
+                title: 'فتح التطبيق'
+              }
+            ]
+          });
+        });
+      }
     }
     return true;
   } catch (error) {
@@ -113,13 +172,27 @@ function scheduleNotificationForTime(time: Date, title: string, body: string, ta
   // Only schedule if it's in the future
   if (timeUntilNotification > 0) {
     const timer = setTimeout(() => {
+      const isDesktop = !('standalone' in navigator) && !('serviceWorker' in navigator);
+      const currentUrl = window.location.href;
+      
       showNotification(title, {
         body,
         icon: '/dhikr-logo.png',
         badge: '/dhikr-logo.png',
         tag,
         renotify: true,
-        requireInteraction: true
+        requireInteraction: true,
+        silent: false,
+        data: { url: currentUrl },
+        ...(isDesktop ? {} : {
+          vibrate: [200, 100, 200],
+          actions: [
+            {
+              action: 'open',
+              title: 'فتح التطبيق'
+            }
+          ]
+        })
       });
       
       // Reschedule for next day immediately after showing notification
@@ -142,6 +215,7 @@ export async function scheduleNotifications(
 
   try {
     const coordinates = await getCurrentPosition();
+    const currentUrl = window.location.href;
 
     if (enablePrayerNotifications) {
       const prayerTimes = getPrayerTimes(coordinates);
@@ -185,16 +259,29 @@ export async function scheduleNotifications(
       })
       .join('، ');
 
+    const isDesktop = !('standalone' in navigator) && !('serviceWorker' in navigator);
     showNotification('تدبر الذكر', {
       body: `تم جدولة تذكير الأذكار في الأوقات التالية:\n${timesStr} ⏰`,
       icon: '/dhikr-logo.png',
       badge: '/dhikr-logo.png',
       tag: 'schedule-update',
       renotify: true,
-      requireInteraction: true
+      requireInteraction: true,
+      silent: false,
+      data: { url: currentUrl },
+      ...(isDesktop ? {} : {
+        vibrate: [200, 100, 200],
+        actions: [
+          {
+            action: 'open',
+            title: 'فتح التطبيق'
+          }
+        ]
+      })
     });
   } catch (error) {
     console.error('Error scheduling notifications:', error);
+    alert('حدث خطأ أثناء جدولة التنبيهات');
   }
 }
 
