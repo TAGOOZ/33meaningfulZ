@@ -14,7 +14,7 @@ export interface NextPrayer {
 export function getPrayerTimes(coordinates: Coordinates): Record<string, Date> {
   const date = new Date();
   const adhanCoordinates = new AdhanCoordinates(coordinates.latitude, coordinates.longitude);
-  const params = CalculationMethod.MuslimWorldLeague();
+  const params = CalculationMethod.Egyptian();
   
   const prayerTimes = new PrayerTimes(adhanCoordinates, date, params);
 
@@ -57,13 +57,13 @@ export function getNextPrayer(coordinates: Coordinates): NextPrayer {
   const todayTimes = new PrayerTimes(
     new AdhanCoordinates(coordinates.latitude, coordinates.longitude),
     today,
-    CalculationMethod.MuslimWorldLeague()
+    CalculationMethod.Egyptian()
   );
 
   const tomorrowTimes = new PrayerTimes(
     new AdhanCoordinates(coordinates.latitude, coordinates.longitude),
     tomorrow,
-    CalculationMethod.MuslimWorldLeague()
+    CalculationMethod.Egyptian()
   );
 
   // Get all prayer times for today and tomorrow
