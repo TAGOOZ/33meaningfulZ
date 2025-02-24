@@ -237,9 +237,18 @@ export default function DhikrCounter() {
       <img 
         src="/dhikr-logo.png" 
         alt="تدبر الذكر" 
-        className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 object-contain mb-6"
+        className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 object-contain mb-2"
       />
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 space-y-6 relative">
+      
+      <button
+        onClick={() => setShowAbout(true)}
+        className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100/50 dark:hover:bg-emerald-800/50 transition-colors mb-2 text-emerald-700 dark:text-emerald-300"
+      >
+        <Info className="w-5 h-5" />
+        <span className="font-arabic">عن التطبيق</span>
+      </button>
+
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 space-y-6 relative mb-8">
         <div className="flex justify-center items-center w-full gap-2">
           <button
             onClick={() => setShowNotificationSettings(true)}
@@ -253,13 +262,6 @@ export default function DhikrCounter() {
                   : 'text-gray-400 dark:text-gray-600'
               }`} 
             />
-          </button>
-          <button
-            onClick={() => setShowAbout(true)}
-            className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
-            title="عن التطبيق"
-          >
-            <Info className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           </button>
           {isInstallable && (
             <button
@@ -372,6 +374,16 @@ export default function DhikrCounter() {
             onTogglePrayerNotifications={handlePrayerNotificationsToggle}
           />
         )}
+      </div>
+
+      <div className="text-center text-lg md:text-xl text-emerald-800 dark:text-emerald-300 font-arabic leading-relaxed max-w-md mx-auto px-4">
+        صدقة جارية عن كل المسلمين الأحياء والأموات
+        <br />
+        صنعت بكل حب لله سبحانه وتعالى
+        <br />
+        اتباعًا لسنة نبيه الكريم محمد ﷺ
+        <br />
+        بواسطة مصطفى محمد تاج الدين
       </div>
     </div>
   );
