@@ -233,18 +233,18 @@ export default function DhikrCounter() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900 dark:to-teal-950 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-950 dark:to-teal-950 flex flex-col items-center justify-center p-4">
       <img 
         src="/dhikr-logo.png" 
         alt="تدبر الذكر" 
-        className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 object-contain mb-2"
+        className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 object-contain mb-2 dark:brightness-90"
       />
       
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 space-y-6 relative mb-8">
+      <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-xl dark:shadow-emerald-900/20 p-6 space-y-6 relative mb-8 backdrop-blur-sm bg-opacity-95 dark:bg-opacity-90">
         <div className="flex flex-wrap justify-center items-center w-full gap-4">
           <button
             onClick={() => setShowNotificationSettings(true)}
-            className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
+            className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all duration-200"
             title={notificationsEnabled ? "إعدادات التنبيهات" : "تفعيل التنبيهات"}
           >
             <Bell 
@@ -260,7 +260,7 @@ export default function DhikrCounter() {
           {isInstallable && (
             <button
               onClick={handleInstall}
-              className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
+              className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all duration-200"
               title="تثبيت التطبيق"
             >
               <Download className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -270,12 +270,12 @@ export default function DhikrCounter() {
 
           <button
             onClick={toggleMode}
-            className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
+            className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all duration-200"
             title={state.isEndlessMode ? "وضع العد التقليدي" : "وضع العد المستمر"}
           >
             {state.isEndlessMode ? (
               <>
-                <Hash className="w-5 h-5 text-emerald-600 dark:text-emerald-100" />
+                <Hash className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 <span className="text-sm">تقليدي</span>
               </>
             ) : (
@@ -288,7 +288,7 @@ export default function DhikrCounter() {
 
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
+            className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all duration-200"
           >
             {isMenuOpen ? (
               <>
@@ -305,7 +305,7 @@ export default function DhikrCounter() {
 
           <button
             onClick={() => setIsDark(!isDark)}
-            className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
+            className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all duration-200"
           >
             {isDark ? (
               <>
@@ -324,15 +324,15 @@ export default function DhikrCounter() {
         <NextPrayerTime />
 
         <div className="text-center space-y-4">
-          <div className="text-3xl font-arabic leading-loose text-gray-800 dark:text-gray-200">
+          <div className="text-3xl font-arabic leading-loose text-gray-800 dark:text-gray-100">
             {getCurrentPhrase().text}
           </div>
           
           <div className="flex justify-center gap-4">
-            <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
               {getTypeTitle(state.currentType)}
             </div>
-            <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
               {!state.isEndlessMode ? `${state.count}/33` : `العدد: ${state.count}`}
             </div>
           </div>
@@ -341,14 +341,14 @@ export default function DhikrCounter() {
         <div className="space-y-2">
           <button
             onClick={handleCount}
-            className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg transform active:scale-95 transition-transform"
+            className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white rounded-xl shadow-lg transform active:scale-95 transition-all duration-200"
           >
             <span className="text-xl">{getButtonText()}</span>
           </button>
 
           <button
             onClick={resetCounter}
-            className="w-full py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-lg text-sm transition-colors"
+            className="w-full py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-sm transition-all duration-200"
           >
             تصفير العداد
           </button>
@@ -363,22 +363,22 @@ export default function DhikrCounter() {
 
         <button
           onClick={() => setShowAbout(true)}
-          className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100/50 dark:hover:bg-emerald-800/50 transition-colors mx-auto mt-4 text-emerald-700 dark:text-emerald-300"
+          className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100/50 dark:hover:bg-emerald-900/50 transition-all duration-200 mx-auto mt-4 text-emerald-700 dark:text-emerald-300"
         >
           <Info className="w-5 h-5" />
           <span className="font-arabic">عن التطبيق</span>
         </button>
 
         {isMenuOpen && (
-          <div className="absolute top-20 right-1/2 transform translate-x-1/2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg z-10 overflow-hidden">
+          <div className="absolute top-20 right-1/2 transform translate-x-1/2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:shadow-emerald-900/20 z-10 overflow-hidden backdrop-blur-sm bg-opacity-95 dark:bg-opacity-90">
             {(['tasbih', 'tahmid', 'takbir'] as const).map((type) => (
               <button
                 key={type}
                 onClick={() => handleTypeChange(type)}
-                className={`w-full text-right px-4 py-3 text-sm transition-colors
+                className={`w-full text-right px-4 py-3 text-sm transition-all duration-200
                   ${state.currentType === type 
-                    ? 'bg-emerald-100 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200' 
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'}`}
+                    ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200' 
+                    : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'}`}
               >
                 {getTypeTitle(type)}
               </button>
@@ -400,7 +400,7 @@ export default function DhikrCounter() {
         )}
       </div>
 
-      <div className="text-center text-lg md:text-xl text-emerald-800 dark:text-emerald-300 font-arabic leading-relaxed max-w-md mx-auto px-4">
+      <div className="text-center text-lg md:text-xl text-emerald-800 dark:text-emerald-200 font-arabic leading-relaxed max-w-md mx-auto px-4">
         صدقة جارية عن كل المسلمين الأحياء والأموات
         <br />
         صنعت بكل حب لله سبحانه وتعالى
