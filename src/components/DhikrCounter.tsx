@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, Menu, X, Infinity, Hash, Download, Info, Bell } from 'lucide-react';
+import { Moon, Sun, Menu, X, Infinity, Hash, Download, Info, Bell, Facebook } from 'lucide-react';
 import { dhikrPhrases } from '../data/phrases';
 import type { DhikrState } from '../types';
 import AboutPage from './AboutPage';
-import NextPrayerTime from './NextPrayerTime';
 import NotificationSettings from './NotificationSettings';
 import { setupNotifications, scheduleNotifications, clearAllNotifications } from '../utils/notifications';
 import { saveDhikrState, loadDhikrState, saveSettings, loadSettings, updateDailyStats } from '../utils/storage';
@@ -321,8 +320,6 @@ export default function DhikrCounter() {
           </button>
         </div>
 
-        <NextPrayerTime />
-
         <div className="text-center space-y-4">
           <div className="text-3xl font-arabic leading-loose text-gray-800 dark:text-gray-100">
             {getCurrentPhrase().text}
@@ -408,6 +405,18 @@ export default function DhikrCounter() {
         اتباعًا لسنة نبيه الكريم محمد ﷺ
         <br />
         بواسطة مصطفى محمد تاج الدين
+        <br />
+        <div className="flex items-center justify-center gap-2 mt-2 text-base">
+          <span>للاقتراحات:</span>
+          <a
+            href="https://www.facebook.com/mostafatag22"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+          >
+            <Facebook className="w-5 h-5" />
+          </a>
+        </div>
       </div>
     </div>
   );
