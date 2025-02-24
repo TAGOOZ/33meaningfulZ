@@ -240,19 +240,11 @@ export default function DhikrCounter() {
         className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 object-contain mb-2"
       />
       
-      <button
-        onClick={() => setShowAbout(true)}
-        className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100/50 dark:hover:bg-emerald-800/50 transition-colors mb-2 text-emerald-700 dark:text-emerald-300"
-      >
-        <Info className="w-5 h-5" />
-        <span className="font-arabic">عن التطبيق</span>
-      </button>
-
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 space-y-6 relative mb-8">
-        <div className="flex justify-center items-center w-full gap-2">
+        <div className="flex flex-wrap justify-center items-center w-full gap-4">
           <button
             onClick={() => setShowNotificationSettings(true)}
-            className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
+            className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
             title={notificationsEnabled ? "إعدادات التنبيهات" : "تفعيل التنبيهات"}
           >
             <Bell 
@@ -262,45 +254,69 @@ export default function DhikrCounter() {
                   : 'text-gray-400 dark:text-gray-600'
               }`} 
             />
+            <span className="text-sm">التنبيهات</span>
           </button>
+
           {isInstallable && (
             <button
               onClick={handleInstall}
-              className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
+              className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
               title="تثبيت التطبيق"
             >
               <Download className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-sm">تثبيت</span>
             </button>
           )}
+
           <button
             onClick={toggleMode}
-            className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
+            className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
             title={state.isEndlessMode ? "وضع العد التقليدي" : "وضع العد المستمر"}
           >
             {state.isEndlessMode ? (
-              <Hash className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <>
+                <Hash className="w-5 h-5 text-emerald-600 dark:text-emerald-100" />
+                <span className="text-sm">تقليدي</span>
+              </>
             ) : (
-              <Infinity className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <>
+                <Infinity className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-sm">مستمر</span>
+              </>
             )}
           </button>
+
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
+            className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
           >
             {isMenuOpen ? (
-              <X className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <>
+                <X className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-sm">إغلاق</span>
+              </>
             ) : (
-              <Menu className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <>
+                <Menu className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-sm">القائمة</span>
+              </>
             )}
           </button>
+
           <button
             onClick={() => setIsDark(!isDark)}
-            className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
+            className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors"
           >
             {isDark ? (
-              <Sun className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <>
+                <Sun className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-sm">نهاري</span>
+              </>
             ) : (
-              <Moon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <>
+                <Moon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-sm">ليلي</span>
+              </>
             )}
           </button>
         </div>
@@ -344,6 +360,14 @@ export default function DhikrCounter() {
             <span className="mr-2">({Math.floor(state.totalCount / 33)}/3)</span>
           )}
         </div>
+
+        <button
+          onClick={() => setShowAbout(true)}
+          className="flex items-center gap-2 p-2 rounded-lg hover:bg-emerald-100/50 dark:hover:bg-emerald-800/50 transition-colors mx-auto mt-4 text-emerald-700 dark:text-emerald-300"
+        >
+          <Info className="w-5 h-5" />
+          <span className="font-arabic">عن التطبيق</span>
+        </button>
 
         {isMenuOpen && (
           <div className="absolute top-20 right-1/2 transform translate-x-1/2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg z-10 overflow-hidden">
