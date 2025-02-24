@@ -104,8 +104,18 @@ export default defineConfig({
               }
             }
           }
+        ],
+        // Handle notification clicks in the service worker
+        additionalManifestEntries: [
+          {
+            url: '/',
+            revision: 'notification-click'
+          }
         ]
-      }
+      },
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts'
     })
   ],
   optimizeDeps: {
